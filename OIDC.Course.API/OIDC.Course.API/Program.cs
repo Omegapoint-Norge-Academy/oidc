@@ -16,10 +16,26 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<IClaimsTransformation, ScopeClaimTransformation>();
 
 builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
     .AddJwtBearer(options =>
     {
         builder.Configuration.Bind("JwtBearerOptions", options);
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            ClockSkew = TimeSpan.Zero,
+            ValidateIssuer = true,
+            ValidIssuer = options.Authority,
+            ValidateAudience = true,
+            ValidAudience = options.Audience,
+            ValidateIssuerSigningKey = true,
+            ValidateLifetime = true,
+            
+        };
     });
 builder.Services.AddAuthorization(options =>
 {
@@ -47,6 +63,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapControllers().RequireAuthorization();
 
 app.Run();
