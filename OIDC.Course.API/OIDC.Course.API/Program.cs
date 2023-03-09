@@ -28,13 +28,7 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters()
         {
             ClockSkew = TimeSpan.Zero,
-            ValidateIssuer = true,
-            ValidIssuer = options.Authority,
-            ValidateAudience = true,
-            ValidAudience = options.Audience,
             ValidateIssuerSigningKey = true,
-            ValidateLifetime = true,
-            
         };
     });
 builder.Services.AddAuthorization(options =>
