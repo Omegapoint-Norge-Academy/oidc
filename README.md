@@ -242,3 +242,37 @@ Make sure that the policy names id the same as used in `AddPolicy()` earlier.
 app.MapControllers().RequireAuthorization("AuthenticatedUser");
 app.MapReverseProxy().RequireAuthorization("AuthenticatedUser");
 ```
+
+When this is added, you dont need to add the authorize attribute to all controllers.
+
+## Account controller
+The account controller should handle login and logout.
+
+Create a controller called `AccountController`.
+And add enpoints like this:
+``` csharp
+[Route("client/[controller]")]
+public class AccountController : ControllerBase
+{
+    [AllowAnonymous]
+    [HttpGet("Login")]
+    public ActionResult Login(string? returnUrl)
+    {
+    var redirectUri = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/";
+    var properties = new AuthenticationProperties { RedirectUri = redirectUri };
+
+        return Challenge(properties);
+    }
+
+    [Authorize]
+    [HttpGet("Logout")]
+    public async Task Logout()
+    {
+        await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme, new AuthenticationProperties
+        {
+            RedirectUri = "https://localhost:44469/",
+        });
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    }
+}
+```
