@@ -19,7 +19,7 @@ app.UseAuthorization();
 Authentication Middleware `UseAuthentication()` attempts to authenticate the user before they're allowed access to secure resources.
 Authorization Middleware `UseAuthorization()` authorizes a user to access secure resources.
 
-### Add Authorization
+### Add Authentication
 There needs to be two authentication schemes, one for cookie, and one for OpenID Connect.
 These name of these schemes are embedded in framework constants:
 ``` csharp
@@ -199,11 +199,46 @@ When all this is added, the code should look like this:
 
 #### Default schemas
 We need to tell .NET that our default scheme is cookie, and that our challenge scheme is openid.
-To du this, add some options to `AddAuthentication()`
+To do this, add some options to `AddAuthentication()`
 ``` csharp
 .AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
 })
+```
+
+### Add Authorization
+We need to add some kind of policy for our users.
+Lets add authorization `AddAuthorization()` and create a simple policy.
+The policy should only require a user to be authenticated.
+Hint: use the `AuthorizationPolicyBuilder()`.
+
+Make sure the policy is configured as default policy and fallback policy
+
+The code should look something like this:
+<details>
+<summary>Spoiler</summary>
+<p>
+
+``` csharp
+builder.Services.AddAuthorization(options =>
+{
+    var defaultPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+    
+    options.AddPolicy("AuthenticatedUser", defaultPolicy);
+    options.DefaultPolicy = defaultPolicy;
+    options.FallbackPolicy = defaultPolicy;
+});
+```
+</p>
+</details>
+
+Also add the policy to all controllers and the reverse proxy by adding `RequireAuthorization()` to the middlewares.
+Make sure that the policy names id the same as used in `AddPolicy()` earlier.
+``` csharp
+app.MapControllers().RequireAuthorization("AuthenticatedUser");
+app.MapReverseProxy().RequireAuthorization("AuthenticatedUser");
 ```
