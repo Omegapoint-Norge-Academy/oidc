@@ -1,16 +1,13 @@
-using System.Net.Http.Headers;
 using System.Web;
-using IdentityModel.AspNetCore.AccessTokenManagement;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using OIDC.Course;
-using Yarp.ReverseProxy.Forwarder;
-using Yarp.ReverseProxy.Transforms;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
 builder.Services
     .AddAuthentication(options =>
@@ -18,7 +15,7 @@ builder.Services
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
     })
-    .AddCookie(options =>
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
@@ -33,30 +30,24 @@ builder.Services
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             return Task.CompletedTask;
         };
-        
-        options.Events.OnSigningOut = async context =>
-        {
-            await context.HttpContext.RevokeUserRefreshTokenAsync();
-        };
     })
     .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
     {
         options.ResponseType = OpenIdConnectResponseType.Code;
         options.UsePkce = true;
-        
+
         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         options.RequireHttpsMetadata = true;
         options.SaveTokens = true;
-        
+
         options.Authority = "https://dev-my7g8x3rrwfzi3lh.eu.auth0.com";
         options.ClientId = "BbSr54nCG1OEl0k9GZi45qeFXnnJttpC";
         options.ClientSecret = "";
-        
+
         options.Scope.Clear();
         options.Scope.Add("openid");
         options.Scope.Add("profile");
         options.Scope.Add("read:forecast");
-        options.Scope.Add("offline_access");
 
         options.Events.OnRedirectToIdentityProvider = context =>
         {
@@ -66,8 +57,7 @@ builder.Services
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 context.HandleResponse();
             }
-            
-            // Auth0 specific implementation
+    
             context.ProtocolMessage.SetParameter("audience", "weather_forecast_api");
             return Task.CompletedTask;
         };
@@ -99,27 +89,6 @@ builder.Services.AddAuthorization(options =>
     options.DefaultPolicy = defaultPolicy;
     options.FallbackPolicy = defaultPolicy;
 });
-
-builder.Services.AddUserAccessTokenManagement(options =>
-{
-    options.RefreshBeforeExpiration = TimeSpan.FromSeconds(30);
-});
-
-builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
-    .AddTransforms(builderContext =>
-    {
-        builderContext.AddRequestTransform(async transformContext =>
-        {
-            var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
-            if (accessToken != null)
-            {
-                transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            }
-        });
-    });
-builder.Services.AddTransient<UserAccessTokenHandler>();
-builder.Services.AddTransient<IForwarderHttpClientFactory, UserAccessTokenProxyHttpClientFactory>();
 
 builder.Services.AddControllersWithViews();
 
