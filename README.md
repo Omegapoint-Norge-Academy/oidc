@@ -1,7 +1,7 @@
 # oidc
 Course material for OIDC
 
-# Workshop guide
+# Workshop guide part 1 - Login/Logout
 ## Dependencies
 Install the following dependencies using Nuget
 - IdentityModel
@@ -40,6 +40,7 @@ builder.Services
 Add this to `Program.cs` just after var `builder = WebApplication.CreateBuilder(args);`
 
 Both these schemes have to be configured. Lets focus on the cookie first.
+
 #### Cookie options
 This cookie defines the session between the frontend and the BFF.
 
@@ -94,7 +95,6 @@ When all this is done, the code should look like this:
 </details>
 
 #### OpenID connect options
-
 This is the configuration that allows us to login using the identity provider (IDP).
 
 Add options for using Authorization code flow with PKCE:
@@ -371,3 +371,272 @@ public class UserController : ControllerBase
 ```
 </p>
 </details>
+
+## Authentication state in frontend
+The frontend needs to fetch the authentication state from the userinfo endpoint, and save it as state.
+There are several ways to to this in a react application, but I recommend using react context, and wrapping the entire app in an AuthProvider.
+Sample code is below, but feel free to do this without looking at the sample code if you want to, or save the auth state a different way if you want to.
+
+<details>
+<summary><b>AuthContext.js</b></summary>
+<p>
+
+``` js
+import { createContext } from "react";
+const AuthContext = createContext();
+export default AuthContext;
+```
+</p>
+</details>
+
+<details>
+<summary><b>AuthProvider.js</b></summary>
+<p>
+
+``` js
+import { useState, useEffect } from 'react';
+import { getUser } from './userService.js'
+import AuthContext from './AuthContext'
+export const AuthProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
+    useEffect(() => {
+        getUser().then(response => {
+            setUser(response)
+        })
+    }, []);
+
+    return (
+        <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>
+    );
+};
+```
+</p>
+</details>
+
+<details>
+<summary><b>useAuthContext.js</b></summary>
+<p>
+
+``` js
+import AuthContext from "./AuthContext";
+import {useContext} from "react";
+export const useAuthContext = () => {
+    const user = useContext(AuthContext);
+    if (user === undefined) {
+        throw new Error("useAuthContext can only be used inside AuthProvider");
+    }
+    return user;
+};
+```
+</p>
+</details>
+
+<details>
+<summary><b>userService.js</b></summary>
+<p>
+
+``` js
+export async function getUser() {
+    const response = await fetch('client/user');
+    return response.json();
+}
+```
+</p>
+</details>
+
+## Login/Logout button
+Now that we have an authentication state, we can add a login button if not logged inn,
+or a logout button if logged in.
+
+Add the button after the NavbarBrand in `NavMenu.js`.
+Get the auth state from `useAuthContext.js` if you saved the state as suggested.
+Conditionally render a link that will navigate to the login/logout endpoint.
+It is very important that the login/logout endpoints are navigated to. These endpoints will return a html page. 
+A nice extra is to render the name of the logged in person when logged in.
+
+Example component below.
+
+<details>
+<summary><b>Authentication.js</b></summary>
+<p>
+
+``` js
+import { useAuthContext } from "../auth/useAuthContext";
+import React from "react";
+
+export function Authentication() {
+    const context = useAuthContext();
+    return context?.user?.isAuthenticated
+        ? <a href="https://localhost:5001/client/account/logout">
+            click here to logout (logged in as {context?.user?.claims?.find(x => x.key === 'name')?.value})</a>
+        : <a href="https://localhost:5001/client/account/login">click here to login</a>;
+}
+```
+</p>
+</details>
+
+## Part 1 milestone: Test login
+This is a milestone, login and logout could now be tested.
+If anything fails, it should be fixed before moving on.
+
+Debugging tips:
+- Use fiddler to inspect the communication between the BFF and the IDP. See [link](#debugging-net-with-fiddler)
+- Use browser tools and inspect the console and network.
+
+When prompted with login from Auth0, sign up with an email and password of your choice.
+
+# Workshop guide part 2 - Accessing remote API
+We will now connect to the weather forecast API.
+- Base uri: https://oidccourseapi.azurewebsites.net
+- Audience: `weather_forecast_api`
+- Scope: `read:forecast`
+
+## Bootstrapping
+To get an access token for the API we need to request the API scope.
+Add the scope to the options in `AddOpenIdConnect`.
+
+Auth0 also requires that audience is specified when requesting scope for an API.
+This is not always required by all IDPs. The `OnRedirectToIdentityProvider` event allows us to add a property with the audience of the API.
+Add the following code to the event:
+
+``` csharp
+context.ProtocolMessage.SetParameter("audience", "weather_forecast_api");
+```
+
+## Exchanging cookie for access token
+The access token is located is accessible through the HttpContext. We are using a reverse proxy for all API requests.
+We can configure a transform on the proxy that adds the access token to the request.
+``` csharp
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+    .AddTransforms(builderContext =>
+    {
+        builderContext.AddRequestTransform(async transformContext =>
+        {
+            var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
+            if (accessToken != null)
+            {
+                transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            }
+        });
+    });
+```
+
+## Part 2 milestone: Test API access
+Test that access we now can access the weather forecast when we are logged in.
+If anything fails, it should be fixed before moving on.
+
+Debugging tips:
+- Set breakpoint inside `AddRequestTransform` and inspect the access token using https://jwt.io
+
+# Workshop guide part 3 - Refreshing the token
+If you have not noticed, the access token has a 60s time to live. When it expires, the token is no longer valid.
+We want to refresh the access token when this happens.
+
+## Dependencies
+Microsoft does not support refresh token management with their handler.
+There are some frameworks that does support this. We are going to du it in the easiest way possible,
+and download `IdentityModel.AspNetCore`. This framework is deprecated and replaced by Duende Identity Server (requires payment),
+so don't use this in real apps.
+
+Refresh token handling can also be implemented without any framework. This is a completely viable solution, 
+just make sure you have knowledge of best practices related to this. We are doing it the easy way though.
+
+Install the following dependencies using Nuget
+- IdentityModel.AspNetCore
+
+## Bootstrapping
+We need to request the `offlie_access` scope. This will instruct the identity provider to giv us a refresh token.
+
+Add the token management from IdentityModel, and configure the when we should refresh.
+In this code we will refresh a token if the access token have less than 30 seconds to live, or if it is expired. 
+``` csharp
+builder.Services.AddUserAccessTokenManagement(options =>
+{
+    options.RefreshBeforeExpiration = TimeSpan.FromSeconds(30);
+});
+```
+
+When signing out it is important that the refresh token is revoked.
+This will trigger a request to the IDP revoking the refresh token.
+This makes sure that the refresh token cannot be used after a session is ended.
+``` csharp
+options.Events.OnSigningOut = async e => { await e.HttpContext.RevokeUserRefreshTokenAsync(); };
+```
+
+## Trigger refresh
+IdentityModel.AspNetCore has a delegating handler called `UserAccessTokenHandler` that is intended for `HttpClient`.
+The handler will check if the access token needs to be refreshed, and perform refresh if necessary.
+It will also add the access token to the request header.
+We are not using a `HttpClient` directly, so we need to modify the YARP proxy client.
+
+First register the delegating handler:
+``` csharp
+builder.Services.AddTransient<UserAccessTokenHandler>();
+```
+
+Then create a new class called `UserAccessTokenProxyHttpClientFactory`.
+``` csharp
+public class UserAccessTokenProxyHttpClientFactory : IForwarderHttpClientFactory
+{
+    private readonly UserAccessTokenHandler _userAccessTokenHandler;
+
+    public UserAccessTokenProxyHttpClientFactory(UserAccessTokenHandler userAccessTokenHandler)
+    {
+        _userAccessTokenHandler = userAccessTokenHandler;
+
+        var handler = new SocketsHttpHandler
+        {
+            UseProxy = false,
+            AllowAutoRedirect = false,
+            AutomaticDecompression = DecompressionMethods.None,
+            UseCookies = false,
+            ActivityHeadersPropagator = new ReverseProxyPropagator(DistributedContextPropagator.Current)
+        };
+
+        _userAccessTokenHandler.InnerHandler = handler;
+    }
+
+    public HttpMessageInvoker CreateClient(ForwarderHttpClientContext context)
+    {
+        if (context.OldClient != null && context.NewConfig == context.OldConfig)
+        {
+            return context.OldClient;
+        }
+
+        return new HttpMessageInvoker(_userAccessTokenHandler, disposeHandler: false);
+    }
+}
+```
+
+Then replace register this so that it overrides the default implementation from YARP:
+``` csharp
+builder.Services.AddTransient<IForwarderHttpClientFactory, UserAccessTokenProxyHttpClientFactory>();
+```
+
+## Part 3 milestone: Test token refresh
+Test that you can still access the weather forecast after waiting more than 60s after login.
+
+Debugging tips:
+- Use fiddler to inspect the communication between the BFF and the IDP. See [link](#debugging-net-with-fiddler)
+
+# Workshop guide done
+Congrats, you are now done. If you have time left, feel free to improve your app.
+If you need suggestions for improvements, ask your course teacher.
+
+# Appendix
+## Debugging .NET with Fiddler
+Fiddler relies on proxies to intercept requests. To inspect all traffic from .NET a proxy must be added.
+Open `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config` and add the following code section at the bottom immediately after `</system.web>`
+
+``` xml
+<system.net>
+    <defaultProxy enabled = "true" useDefaultCredentials = "true">
+        <proxy autoDetect="false" bypassonlocal="false" proxyaddress="http://127.0.0.1:8888" usesystemdefault="false" />
+    </defaultProxy>
+</system.net>
+```
+
+This will allow fiddler to read .NET traffic.
+
+**NB:** remember to remove the proxy when finished.
