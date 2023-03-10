@@ -25,6 +25,10 @@
 - [Appendix](#appendix)
     * [Debugging .NET with Fiddler](#debugging-net-with-fiddler)
 
+# Intro
+## Architecture
+![alt text](https://github.com/ITverket-Academy/oidc/blob/main/Resources/bff_pattern.png?raw=true)
+
 # Workshop guide part 1 - Login and Logout
 ## Dependencies
 Install the following dependencies using Nuget
