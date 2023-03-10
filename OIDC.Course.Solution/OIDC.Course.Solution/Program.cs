@@ -67,7 +67,8 @@ builder.Services
         };
         options.Events.OnRedirectToIdentityProvider = context =>
         {
-            if (context.Request.Path.StartsWithSegments("/api"))
+            if (context.Request.Path.StartsWithSegments("/api") ||
+                context.Request.Path.StartsWithSegments("/client/user"))
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 context.HandleResponse();

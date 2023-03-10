@@ -1,3 +1,5 @@
+- [Intro](#intro)
+    * [Architecture](#architecture)
 - [Workshop guide part 1 - Login and Logout](#workshop-guide-part-1---login-and-logout)
     * [Dependencies](#dependencies)
     * [Bootstrapping](#bootstrapping)
@@ -26,6 +28,9 @@
     * [Debugging .NET with Fiddler](#debugging-net-with-fiddler)
 
 # Intro
+This repo contains code and documentation for the OAuth2 and OpenID Connect.
+The course focuses on best practices, and the BFF pattern.
+
 ## Architecture
 ![alt text](https://github.com/ITverket-Academy/oidc/blob/main/Resources/bff_pattern.png?raw=true)
 
@@ -161,14 +166,15 @@ The `profile` scope will instruct the IDP to return claims as
 `name`, `family_name`, `given_name`, `middle_name`, `nickname`, `picture`, and `updated_at` if available.
 In essence the `profile` scope lets us get basic user profile info.
 
-We also want to make sure that redirect to the identity provider is not done when calling the API.
+We also want to make sure that redirect to the identity provider is not done when calling the API, or the user info endpoint
 The framework will try to redirect to the identity provider when the API responds with Unauthorized.
 We can modify this behaviour by adding intercepting the `OnRedirectToIdentityProvider` event and setting Unauthorized as the response.
 
 ``` csharp
 options.Events.OnRedirectToIdentityProvider = context =>
 {
-    if (context.Request.Path.StartsWithSegments("/api"))
+    if (context.Request.Path.StartsWithSegments("/api") ||
+        context.Request.Path.StartsWithSegments("/client/user"))
     {
         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
         context.HandleResponse();
@@ -224,7 +230,8 @@ When all this is added, the code should look like this:
 
     options.Events.OnRedirectToIdentityProvider = context =>
     {
-        if (context.Request.Path.StartsWithSegments("/api"))
+        if (context.Request.Path.StartsWithSegments("/api") ||
+            context.Request.Path.StartsWithSegments("/client/user"))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             context.HandleResponse();
@@ -365,7 +372,7 @@ Create a user controller with the current endpoint:
 It should return a `UserInfo` record. `UserInfo` should be populated with data from the `UserPrincipal`.
 When adding claims to `UserInfo`, make sure to only add the claims we need.
 We do not want to expose all claims for security reasons.
-For now, expose only the claim named `name`. The endpoint should allow anonymous access.
+For now, expose only the claim named `name`.
 
 <details>
 <summary><b>Spoiler (Full code)</b></summary>
@@ -378,7 +385,6 @@ public class UserController : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(UserInfo), StatusCodes.Status200OK)]
-    [AllowAnonymous]
     public IActionResult GetCurrentUser()
     {
         var claimsToExpose = new List<string>()
@@ -428,9 +434,9 @@ import AuthContext from './AuthContext'
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     useEffect(() => {
-        getUser().then(response => {
-            setUser(response)
-        })
+        getUser()
+            .then(response => { setUser(response) })
+            .catch(e => setUser({ isAuthenticated: false }))
     }, []);
 
     return (

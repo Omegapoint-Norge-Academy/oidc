@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace OIDC.Course.Solution.Controllers;
 
@@ -9,7 +8,6 @@ public class UserController : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(UserInfo), StatusCodes.Status200OK)]
-    [AllowAnonymous]
     public IActionResult GetCurrentUser()
     {
         var claimsToExpose = new List<string>()

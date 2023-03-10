@@ -4,9 +4,9 @@ import AuthContext from './AuthContext'
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     useEffect(() => {
-        getUser().then(response => {
-            setUser(response)
-        })
+        getUser()
+            .then(response => { setUser(response) })
+            .catch(e => setUser({ isAuthenticated: false }))
     }, []);
 
     return (
