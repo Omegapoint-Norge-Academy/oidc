@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OIDC.Course.Solution", "OIDC.Course.Solution\OIDC.Course.Solution.csproj", "{8C2F5B20-930A-4499-80BB-538F368E9D13}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OIDC.Course.Part3.Solution", "OIDC.Course.Part3.Solution\OIDC.Course.Part3.Solution.csproj", "{8C2F5B20-930A-4499-80BB-538F368E9D13}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
