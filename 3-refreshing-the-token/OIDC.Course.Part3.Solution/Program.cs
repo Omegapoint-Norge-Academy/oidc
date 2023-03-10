@@ -18,35 +18,57 @@ builder.Services
     })
     .AddCookie(options =>
     {
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
-        options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
-        options.Cookie.IsEssential = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Strict;
-        options.Events.OnSigningOut = async e => { await e.HttpContext.RevokeUserRefreshTokenAsync(); };
+        options.Cookie.IsEssential = true;
+        
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        options.SlidingExpiration = true;
 
         options.Events.OnRedirectToAccessDenied = context =>
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             return Task.CompletedTask;
         };
+        
+        options.Events.OnSigningOut = async context =>
+        {
+            await context.HttpContext.RevokeUserRefreshTokenAsync();
+        };
     })
     .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
     {
+        options.ResponseType = OpenIdConnectResponseType.Code;
+        options.UsePkce = true;
+        
         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         options.RequireHttpsMetadata = true;
         options.SaveTokens = true;
+        
         options.Authority = "https://dev-my7g8x3rrwfzi3lh.eu.auth0.com";
         options.ClientId = "BbSr54nCG1OEl0k9GZi45qeFXnnJttpC";
         options.ClientSecret = "";
-        options.ResponseType = OpenIdConnectResponseType.Code;
-        options.UsePkce = true;
+        
         options.Scope.Clear();
         options.Scope.Add("openid");
         options.Scope.Add("profile");
         options.Scope.Add("offline_access");
         options.Scope.Add("read:forecast");
+
+        options.Events.OnRedirectToIdentityProvider = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api") ||
+                context.Request.Path.StartsWithSegments("/client/user"))
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.HandleResponse();
+            }
+            
+            // Auth0 specific implementation
+            context.ProtocolMessage.SetParameter("audience", "weather_forecast_api");
+            return Task.CompletedTask;
+        };
 
         // Auth0 specific implementation
         options.SignedOutCallbackPath = "/";
@@ -61,18 +83,6 @@ builder.Services
 
             context.ProtocolMessage.IssuerAddress = logoutUri;
 
-            return Task.CompletedTask;
-        };
-        options.Events.OnRedirectToIdentityProvider = context =>
-        {
-            if (context.Request.Path.StartsWithSegments("/api") ||
-                context.Request.Path.StartsWithSegments("/client/user"))
-            {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                context.HandleResponse();
-            }
-            
-            context.ProtocolMessage.SetParameter("audience", "weather_forecast_api");
             return Task.CompletedTask;
         };
     });

@@ -114,9 +114,10 @@ When all this is done, the code should look like this:
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.Strict;
     options.Cookie.IsEssential = true;
+    
     options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
     options.SlidingExpiration = true;
-    
+
     options.Events.OnRedirectToAccessDenied = context =>
     {
         context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -478,6 +479,13 @@ export async function getUser() {
 </p>
 </details>
 
+Wrap the `App` component in the provider in `ìndex.js`
+``` js
+<AuthProvider>
+    <App />
+</AuthProvider>
+```
+
 ## Login/Logout button
 Now that we have an authentication state, we can add a login button if not logged inn,
 or a logout button if logged in.
@@ -595,7 +603,10 @@ When signing out it is important that the refresh token is revoked.
 This will trigger a request to the IDP revoking the refresh token.
 This makes sure that the refresh token cannot be used after a session is ended.
 ``` csharp
-options.Events.OnSigningOut = async e => { await e.HttpContext.RevokeUserRefreshTokenAsync(); };
+options.Events.OnSigningOut = async context =>
+{
+    await context.HttpContext.RevokeUserRefreshTokenAsync();
+};
 ```
 
 ## Trigger refresh
@@ -643,10 +654,13 @@ public class UserAccessTokenProxyHttpClientFactory : IForwarderHttpClientFactory
 }
 ```
 
-Then replace register this so that it overrides the default implementation from YARP:
+Then register this so that it overrides the default implementation from YARP:
 ``` csharp
 builder.Services.AddTransient<IForwarderHttpClientFactory, UserAccessTokenProxyHttpClientFactory>();
 ```
+
+Now that we are using the `UserAccessTokenHandler` we dont need the `AddTransforms` on the proxy anymore.
+Remove the code previously added.
 
 ## Part 3 milestone: Test token refresh
 Test that you can still access the weather forecast after waiting more than 60s after login.
