@@ -25,10 +25,10 @@ jobs:
           include-prerelease: true
 
       - name: Build with dotnet
-        run: dotnet build OIDC.Course.API/OIDC.Course.API.sln --configuration Release
+        run: dotnet build api/OIDC.Course.API.sln --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish OIDC.Course.API/OIDC.Course.API.sln -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish api/OIDC.Course.API.sln -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
