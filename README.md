@@ -1,7 +1,31 @@
-# oidc
-Course material for OIDC
+- [Workshop guide part 1 - Login and Logout](#workshop-guide-part-1---login-and-logout)
+    * [Dependencies](#dependencies)
+    * [Bootstrapping](#bootstrapping)
+        + [Middleware](#middleware)
+        + [Add Authentication](#add-authentication)
+            - [Cookie options](#cookie-options)
+            - [OpenID connect options](#openid-connect-options)
+            - [Default schemas](#default-schemas)
+        + [Add Authorization](#add-authorization)
+    * [Account controller](#account-controller)
+    * [User controller](#user-controller)
+    * [Authentication state in frontend](#authentication-state-in-frontend)
+    * [Login/Logout button](#login-logout-button)
+    * [Part 1 milestone: Test login](#part-1-milestone--test-login)
+- [Workshop guide part 2 - Accessing remote API](#workshop-guide-part-2---accessing-remote-api)
+    * [Bootstrapping](#bootstrapping-1)
+    * [Exchanging cookie for access token](#exchanging-cookie-for-access-token)
+    * [Part 2 milestone: Test API access](#part-2-milestone--test-api-access)
+- [Workshop guide part 3 - Refreshing the token](#workshop-guide-part-3---refreshing-the-token)
+    * [Dependencies](#dependencies-1)
+    * [Bootstrapping](#bootstrapping-2)
+    * [Trigger refresh](#trigger-refresh)
+    * [Part 3 milestone: Test token refresh](#part-3-milestone--test-token-refresh)
+- [Workshop guide done](#workshop-guide-done)
+- [Appendix](#appendix)
+    * [Debugging .NET with Fiddler](#debugging-net-with-fiddler)
 
-# Workshop guide part 1 - Login/Logout
+# Workshop guide part 1 - Login and Logout
 ## Dependencies
 Install the following dependencies using Nuget
 - IdentityModel
@@ -480,7 +504,7 @@ This is a milestone, login and logout could now be tested.
 If anything fails, it should be fixed before moving on.
 
 Debugging tips:
-- Use fiddler to inspect the communication between the BFF and the IDP. See [link](#debugging-net-with-fiddler)
+- Use fiddler to inspect the communication between the BFF and the IDP. See [appendix](#debugging-net-with-fiddler)
 - Use browser tools and inspect the console and network.
 
 When prompted with login from Auth0, sign up with an email and password of your choice.
@@ -618,7 +642,7 @@ builder.Services.AddTransient<IForwarderHttpClientFactory, UserAccessTokenProxyH
 Test that you can still access the weather forecast after waiting more than 60s after login.
 
 Debugging tips:
-- Use fiddler to inspect the communication between the BFF and the IDP. See [link](#debugging-net-with-fiddler)
+- Use fiddler to inspect the communication between the BFF and the IDP. See [appendix](#debugging-net-with-fiddler)
 
 # Workshop guide done
 Congrats, you are now done. If you have time left, feel free to improve your app.
