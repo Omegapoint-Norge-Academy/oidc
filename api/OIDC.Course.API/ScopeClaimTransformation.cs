@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Authentication;
 
 namespace OIDC.Course.API;
 
+/// <summary>
+/// Transforms scopes from space delimited string to separate scopes 
+/// </summary>
 public class ScopeClaimTransformation : IClaimsTransformation
 {
     public Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
