@@ -5,12 +5,11 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using OIDC.Course.Solution;
+using OIDC.Course;
 using Yarp.ReverseProxy.Forwarder;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services
     .AddAuthentication(options =>
     {
@@ -22,7 +21,6 @@ builder.Services
         options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
-        // No consent is required to store authentication cookies (ref. GDPR)
         options.Cookie.IsEssential = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Strict;

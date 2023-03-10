@@ -1,4 +1,4 @@
-﻿namespace OIDC.Course.Solution;
+﻿namespace OIDC.Course;
 
 public record UserInfo(
     bool IsAuthenticated,

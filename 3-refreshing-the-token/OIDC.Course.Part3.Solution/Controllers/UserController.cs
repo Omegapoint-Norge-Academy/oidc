@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace OIDC.Course.Solution.Controllers;
+namespace OIDC.Course.Controllers;
 
 [ApiController]
 [Route("client/[controller]")]

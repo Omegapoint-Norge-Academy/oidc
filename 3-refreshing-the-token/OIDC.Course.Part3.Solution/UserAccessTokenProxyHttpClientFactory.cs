@@ -3,7 +3,7 @@ using System.Net;
 using IdentityModel.AspNetCore.AccessTokenManagement;
 using Yarp.ReverseProxy.Forwarder;
 
-namespace OIDC.Course.Solution;
+namespace OIDC.Course;
 
 public class UserAccessTokenProxyHttpClientFactory : IForwarderHttpClientFactory
 {
