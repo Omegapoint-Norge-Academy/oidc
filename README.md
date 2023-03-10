@@ -31,6 +31,9 @@
 This repo contains code and documentation for the OAuth2 and OpenID Connect.
 The course focuses on best practices, and the BFF pattern.
 
+The workshop is divided into three parts,
+where the first part is is significantly more work than the others.
+
 ## Architecture
 ![alt text](https://github.com/ITverket-Academy/oidc/blob/main/Resources/bff_pattern.png?raw=true)
 
@@ -524,6 +527,7 @@ If anything fails, it should be fixed before moving on.
 Debugging tips:
 - Use fiddler to inspect the communication between the BFF and the IDP. See [appendix](#debugging-net-with-fiddler)
 - Use browser tools and inspect the console and network.
+- Compare with [solution](1-login-and-logout)
 
 When prompted with login from Auth0, sign up with an email and password of your choice.
 
@@ -570,6 +574,7 @@ If anything fails, it should be fixed before moving on.
 
 Debugging tips:
 - Set breakpoint inside `AddRequestTransform` and inspect the access token using https://jwt.io
+- Compare with [solution](2-accessing-remote-api)
 
 # Workshop guide part 3 - Refreshing the token
 If you have not noticed, the access token has a 60s time to live. When it expires, the token is no longer valid.
@@ -667,6 +672,7 @@ Test that you can still access the weather forecast after waiting more than 60s 
 
 Debugging tips:
 - Use fiddler to inspect the communication between the BFF and the IDP. See [appendix](#debugging-net-with-fiddler)
+- Compare with [solution](3-refreshing-the-token)
 
 # Workshop guide done
 Congrats, you are now done. If you have time left, feel free to improve your app.
