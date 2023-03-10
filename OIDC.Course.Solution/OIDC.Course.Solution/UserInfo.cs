@@ -1,8 +1,5 @@
 ﻿namespace OIDC.Course.Solution;
 
-public class UserInfo
-{
-    public bool IsAuthenticated { get; set; }
-
-    public Dictionary<string, string> Claims { get; set; }
-}
+public record UserInfo(
+    bool IsAuthenticated,
+    List<KeyValuePair<string, string>> Claims);

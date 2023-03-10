@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace OIDC.Course.Solution.Controllers;
 
-
 [ApiController]
 [Route("client/[controller]")]
 public class UserController : ControllerBase
@@ -13,12 +12,17 @@ public class UserController : ControllerBase
     [AllowAnonymous]
     public IActionResult GetCurrentUser()
     {
-        var user = new UserInfo()
+        var claimsToExpose = new List<string>()
         {
-            IsAuthenticated = User.Identity?.IsAuthenticated ?? false,
-            Claims = User.Claims.ToDictionary(c => c.Type, c => c.Value),
+            "name"
         };
 
+        var user = new UserInfo(
+            User.Identity?.IsAuthenticated ?? false,
+            User.Claims
+                .Select(c => new KeyValuePair<string, string>(c.Type, c.Value))
+                .Where(c => claimsToExpose.Contains(c.Key))
+                .ToList());
         return Ok(user);
     }
 }

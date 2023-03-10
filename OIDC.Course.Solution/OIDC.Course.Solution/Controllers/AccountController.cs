@@ -6,12 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace OIDC.Course.Solution.Controllers;
 
+[ApiController]
 [Route("client/[controller]")]
 public class AccountController : ControllerBase
 {
     [AllowAnonymous]
     [HttpGet("Login")]
-    public ActionResult Login(string? returnUrl)
+    public ActionResult Login([FromQuery] string? returnUrl)
     {
         var redirectUri = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/";
         var properties = new AuthenticationProperties { RedirectUri = redirectUri };

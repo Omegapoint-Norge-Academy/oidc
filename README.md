@@ -59,7 +59,7 @@ The SlidingExpiration is set to true to instruct the handler to re-issue a new c
 A session cookie should always be considered essential to the application.
 To skip cookie consent, configure `IsEssential` to `true`.
 
-Lastly add code to deliver 403 forbidden insted of redirecting to the login page when a resource is denied.
+Lastly add code to deliver 403 forbidden instead of redirecting to the login page when a resource is denied.
 ``` csharp
 options.Events.OnRedirectToAccessDenied = context =>
 {
@@ -70,7 +70,7 @@ options.Events.OnRedirectToAccessDenied = context =>
 
 When all this is done, the code should look like this:
 <details>
-<summary>Spoiler</summary>
+<summary><b>Spoiler (Full code)</b></summary>
 <p>
 
 ``` csharp
@@ -133,6 +133,23 @@ The `profile` scope will instruct the IDP to return claims as
 `name`, `family_name`, `given_name`, `middle_name`, `nickname`, `picture`, and `updated_at` if available.
 In essence the `profile` scope lets us get basic user profile info.
 
+We also want to make sure that redirect to the identity provider is not done when calling the API.
+The framework will try to redirect to the identity provider when the API responds with Unauthorized.
+We can modify this behaviour by adding intercepting the `OnRedirectToIdentityProvider` event and setting Unauthorized as the response.
+
+``` csharp
+options.Events.OnRedirectToIdentityProvider = context =>
+{
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        context.HandleResponse();
+    }
+
+    return Task.CompletedTask;
+};
+```
+
 Most identity providers (IDPs) have there own quirks.
 Auth0 have a sign out endpoint that does not conform to standards.
 To handle this, add this code to the options:
@@ -156,7 +173,7 @@ This code builds the sign out request uri and configures the sign out callback.
 
 When all this is added, the code should look like this:
 <details>
-<summary>Spoiler</summary>
+<summary><b>Spoiler (Full code)</b></summary>
 <p>
 
 ``` csharp
@@ -176,6 +193,17 @@ When all this is added, the code should look like this:
     options.Scope.Clear();
     options.Scope.Add("openid");
     options.Scope.Add("profile");
+
+    options.Events.OnRedirectToIdentityProvider = context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api"))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.HandleResponse();
+        }
+    
+        return Task.CompletedTask;
+    };
 
     // Auth0 specific implementation
     options.SignedOutCallbackPath = "/";
@@ -218,7 +246,7 @@ Make sure the policy is configured as default policy and fallback policy
 
 The code should look something like this:
 <details>
-<summary>Spoiler</summary>
+<summary><b>Spoiler (Full code)</b></summary>
 <p>
 
 ``` csharp
@@ -248,15 +276,29 @@ When this is added, you dont need to add the authorize attribute to all controll
 ## Account controller
 The account controller should handle login and logout.
 
-Create a controller called `AccountController`.
-And add enpoints like this:
+Create a controller called `AccountController`,
+and add two endpoints:
+
+**client/account/login:** This endpoint should be a http get, and it should accept a `returnUrl` as a query parameter.
+It should return a `Challenge()` where the `returnUrl` is passed inn by `AuthenticationProperties`. If the `returnUrl` is null, then it should be set to "/".
+The endpoint should be accessible for anonymous users.
+
+**client/account/logout:** This endpoint should be a http get, and accept no parameters.
+It should da a `HttpContext.SignOutAsync()` on both the cookie scheme, and te openid scheme.
+When signing out of the cookie scheme a redirect uri to the home page of the app should be configured.
+
+<details>
+<summary><b>Spoiler (Full code)</b></summary>
+<p>
+
 ``` csharp
+[ApiController]
 [Route("client/[controller]")]
 public class AccountController : ControllerBase
 {
     [AllowAnonymous]
     [HttpGet("Login")]
-    public ActionResult Login(string? returnUrl)
+    public ActionResult Login([FromQuery] string? returnUrl)
     {
         var redirectUri = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/";
         var properties = new AuthenticationProperties { RedirectUri = redirectUri };
@@ -276,3 +318,56 @@ public class AccountController : ControllerBase
     }
 }
 ```
+</p>
+</details>
+
+## User controller
+The user controller should return authentication state. This state is intended for the client.
+Create a user info record like below:
+
+``` csharp
+public record UserInfo(
+    bool IsAuthenticated,
+    List<KeyValuePair<string, string>> Claims);
+```
+
+Create a user controller with the current endpoint:
+
+**client/account/user:** This endpoint should be a http get, and accept no parameters.
+It should return a `UserInfo` record. `UserInfo` should be populated with data from the `UserPrincipal`.
+When adding claims to `UserInfo`, make sure to only add the claims we need.
+We do not want to expose all claims for security reasons.
+For now, expose only the claim named `name`. The endpoint should allow anonymous access.
+
+<details>
+<summary><b>Spoiler (Full code)</b></summary>
+<p>
+
+``` csharp
+[ApiController]
+[Route("client/[controller]")]
+public class UserController : ControllerBase
+{
+    [HttpGet]
+    [ProducesResponseType(typeof(UserInfo), StatusCodes.Status200OK)]
+    [AllowAnonymous]
+    public IActionResult GetCurrentUser()
+    {
+        var claimsToExpose = new List<string>()
+        {
+            "name"
+        };
+
+        var user = new UserInfo(
+            User.Identity?.IsAuthenticated ?? false,
+            User.Claims
+                .Select(c => new KeyValuePair<string, string>(c.Type, c.Value))
+                .Where(c => claimsToExpose.Contains(c.Key))
+                .ToList());
+
+        return Ok(user);
+    }
+}
+```
+</p>
+</details>

@@ -69,6 +69,12 @@ builder.Services
         };
         options.Events.OnRedirectToIdentityProvider = context =>
         {
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.HandleResponse();
+            }
+            
             context.ProtocolMessage.SetParameter("audience", "weather_forecast_api");
             return Task.CompletedTask;
         };
