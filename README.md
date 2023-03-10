@@ -12,17 +12,17 @@
     * [Account controller](#account-controller)
     * [User controller](#user-controller)
     * [Authentication state in frontend](#authentication-state-in-frontend)
-    * [Login/Logout button](#login-logout-button)
-    * [Part 1 milestone: Test login](#part-1-milestone--test-login)
+    * [Login and logout button](#login-and-logout-button)
+    * [Part 1 milestone: Test login](#part-1-milestone-test-login)
 - [Workshop guide part 2 - Accessing remote API](#workshop-guide-part-2---accessing-remote-api)
     * [Bootstrapping](#bootstrapping-1)
     * [Exchanging cookie for access token](#exchanging-cookie-for-access-token)
-    * [Part 2 milestone: Test API access](#part-2-milestone--test-api-access)
+    * [Part 2 milestone: Test API access](#part-2-milestone-test-api-access)
 - [Workshop guide part 3 - Refreshing the token](#workshop-guide-part-3---refreshing-the-token)
     * [Dependencies](#dependencies-1)
     * [Bootstrapping](#bootstrapping-2)
     * [Trigger refresh](#trigger-refresh)
-    * [Part 3 milestone: Test token refresh](#part-3-milestone--test-token-refresh)
+    * [Part 3 milestone: Test token refresh](#part-3-milestone-test-token-refresh)
 - [Workshop guide done](#workshop-guide-done)
 - [Appendix](#appendix)
     * [Debugging .NET with Fiddler](#debugging-net-with-fiddler)
@@ -489,7 +489,7 @@ Wrap the `App` component in the provider in `ìndex.js`
 </AuthProvider>
 ```
 
-## Login/Logout button
+## Login and logout button
 Now that we have an authentication state, we can add a login button if not logged inn,
 or a logout button if logged in.
 
