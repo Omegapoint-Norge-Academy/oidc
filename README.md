@@ -676,7 +676,14 @@ Debugging tips:
 
 # Workshop guide done
 Congrats, you are now done. If you have time left, feel free to improve your app.
-If you need suggestions for improvements, ask your course teacher.
+
+Suggested improvements:
+- Add anti-forgery token for protection against CSRF from sub domains.
+- Add Content Security Policy (CSP) for protection against cross-site scripting (XSS)
+- Advanced: Implement a server side session store by implementing the `ITicketStore` interface. Can be configured in cookie options.
+- Advanced: implement automatic refresh of tokens without using IdentityModel.AspNetCore.
+
+For additional suggestions for improvements, ask your course teacher.
 
 # Appendix
 ## Debugging .NET with Fiddler
