@@ -34,8 +34,7 @@
 This repo contains code and documentation for the OAuth2 and OpenID Connect.
 The course focuses on best practices, and the BFF pattern.
 
-The workshop is divided into three parts,
-where the first part is is significantly more work than the others.
+The workshop is divided into four parts. Part one and two will take more time to complete than part three and four.
 
 ## Architecture
 ![alt text](Resources/bff_pattern.png?raw=true)
