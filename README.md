@@ -10,19 +10,22 @@
             - [Default schemas](#default-schemas)
         + [Add Authorization](#add-authorization)
     * [Account controller](#account-controller)
+    * [Login and logout button](#login-and-logout-button)
+    * [Part 1 milestone: Test login](#part-1-milestone--test-login)
+- [Workshop guide part 2 - User context](#workshop-guide-part-2---user-context)
     * [User controller](#user-controller)
     * [Authentication state in frontend](#authentication-state-in-frontend)
-    * [Login and logout button](#login-and-logout-button)
-    * [Part 1 milestone: Test login](#part-1-milestone-test-login)
-- [Workshop guide part 2 - Accessing remote API](#workshop-guide-part-2---accessing-remote-api)
+    * [Login and logout button](#login-and-logout-button-1)
+    * [Part 2 milestone: Test user context](#part-2-milestone--test-user-context)
+- [Workshop guide part 3 - Accessing remote API](#workshop-guide-part-3---accessing-remote-api)
     * [Bootstrapping](#bootstrapping-1)
     * [Exchanging cookie for access token](#exchanging-cookie-for-access-token)
-    * [Part 2 milestone: Test API access](#part-2-milestone-test-api-access)
-- [Workshop guide part 3 - Refreshing the token](#workshop-guide-part-3---refreshing-the-token)
+    * [Part 3 milestone: Test API access](#part-3-milestone--test-api-access)
+- [Workshop guide part 4 - Refreshing the token](#workshop-guide-part-4---refreshing-the-token)
     * [Dependencies](#dependencies-1)
     * [Bootstrapping](#bootstrapping-2)
     * [Trigger refresh](#trigger-refresh)
-    * [Part 3 milestone: Test token refresh](#part-3-milestone-test-token-refresh)
+    * [Part 4 milestone: Test token refresh](#part-4-milestone--test-token-refresh)
 - [Workshop guide done](#workshop-guide-done)
 - [Appendix](#appendix)
     * [Debugging .NET with Fiddler](#debugging-net-with-fiddler)
@@ -360,6 +363,54 @@ public class AccountController : ControllerBase
 </p>
 </details>
 
+## Login and logout button
+Now that we have an login and logout endpoints, we can add a login button and a logout button.
+We do not yet have any authentication state in the frontend, so we dont know what button to render yet.
+So for now we will render both buttons no matter what.
+Add the buttons after the NavbarBrand in `NavMenu.js`.
+It is very important that the login/logout endpoints are navigated to. These endpoints will return a html page.
+The easiest solution is to use the `<a>` element.
+
+Example component below.
+
+<details>
+<summary><b>Authentication.js</b></summary>
+<p>
+
+``` js
+import React from "react";
+import { useLocation } from "react-router-dom";
+
+export function Authentication() {
+    const location = useLocation();
+
+    return <div>
+        <a href={`client/account/login?returnUrl=${location.pathname}`}>click here to login</a>
+        <p></p>
+        <a href="client/account/logout">click here to logout</a>
+    </div>
+}
+```
+</p>
+</details>
+
+## Part 1 milestone: Test login
+This is a milestone, login and logout could now be tested.
+When logging in, you should be redirected to Auth0 login page.
+When prompted with login from Auth0, sign up with an email and password of your choice.
+To verify that you are actually logged in, go to the browser console and check if a cookie named `.AspNetCore.Cookies` is present.
+Also try logging out, and logging in again and verify that you are prompted with login again.
+
+If anything fails, it should be fixed before moving on.
+
+Debugging tips:
+- Use fiddler to inspect the communication between the BFF and the IDP. See [appendix](#debugging-net-with-fiddler)
+- Use browser tools and inspect the console and network.
+- Compare with [solution](1-login-and-logout)
+
+# Workshop guide part 2 - User context
+This parts is about adding an authentication context to the frontend.
+
 ## User controller
 The user controller should return authentication state. This state is intended for the client.
 Create a user info record like below:
@@ -490,14 +541,11 @@ Wrap the `App` component in the provider in `ìndex.js`
 ```
 
 ## Login and logout button
-Now that we have an authentication state, we can add a login button if not logged inn,
-or a logout button if logged in.
+Now that we have an authentication state, we can modify our login component to only show login or logout.
 
-Add the button after the NavbarBrand in `NavMenu.js`.
 Get the auth state from `useAuthContext.js` if you saved the state as suggested.
-Conditionally render a link that will navigate to the login/logout endpoint.
-It is very important that the login/logout endpoints are navigated to. These endpoints will return a html page. 
-A nice extra is to render the name of the logged in person when logged in.
+As this to conditionally render login or logout.
+Also render the name of the logged in person when logged in. The name can be fetched from the claims.
 
 Example component below.
 
@@ -523,18 +571,18 @@ export function Authentication() {
 </p>
 </details>
 
-## Part 1 milestone: Test login
-This is a milestone, login and logout could now be tested.
+## Part 2 milestone: Test user context
+This is a milestone, user context can now be tested.
 If anything fails, it should be fixed before moving on.
 
 Debugging tips:
 - Use fiddler to inspect the communication between the BFF and the IDP. See [appendix](#debugging-net-with-fiddler)
 - Use browser tools and inspect the console and network.
-- Compare with [solution](1-login-and-logout)
+- Compare with [solution](2-user-context)
 
 When prompted with login from Auth0, sign up with an email and password of your choice.
 
-# Workshop guide part 2 - Accessing remote API
+# Workshop guide part 3 - Accessing remote API
 We will now connect to the weather forecast API.
 - Base uri: https://oidccourseapi.azurewebsites.net
 - Audience: `weather_forecast_api`
@@ -571,15 +619,15 @@ builder.Services.AddReverseProxy()
     });
 ```
 
-## Part 2 milestone: Test API access
+## Part 3 milestone: Test API access
 Test that access we now can access the weather forecast when we are logged in.
 If anything fails, it should be fixed before moving on.
 
 Debugging tips:
 - Set breakpoint inside `AddRequestTransform` and inspect the access token using https://jwt.io
-- Compare with [solution](2-accessing-remote-api)
+- Compare with [solution](3-accessing-remote-api)
 
-# Workshop guide part 3 - Refreshing the token
+# Workshop guide part 4 - Refreshing the token
 If you have not noticed, the access token has a 60s time to live. When it expires, the token is no longer valid.
 We want to refresh the access token when this happens.
 
@@ -670,12 +718,12 @@ builder.Services.AddTransient<IForwarderHttpClientFactory, UserAccessTokenProxyH
 Now that we are using the `UserAccessTokenHandler` we dont need the `AddTransforms` on the proxy anymore.
 Remove the code previously added.
 
-## Part 3 milestone: Test token refresh
+## Part 4 milestone: Test token refresh
 Test that you can still access the weather forecast after waiting more than 60s after login.
 
 Debugging tips:
 - Use fiddler to inspect the communication between the BFF and the IDP. See [appendix](#debugging-net-with-fiddler)
-- Compare with [solution](3-refreshing-the-token)
+- Compare with [solution](4-refreshing-the-token)
 
 # Workshop guide done
 Congrats, you are now done. If you have time left, feel free to improve your app.
