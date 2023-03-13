@@ -106,18 +106,7 @@ builder.Services.AddUserAccessTokenManagement(options =>
 });
 
 builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
-    .AddTransforms(builderContext =>
-    {
-        builderContext.AddRequestTransform(async transformContext =>
-        {
-            var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
-            if (accessToken != null)
-            {
-                transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            }
-        });
-    });
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddTransient<UserAccessTokenHandler>();
 builder.Services.AddTransient<IForwarderHttpClientFactory, UserAccessTokenProxyHttpClientFactory>();
 
