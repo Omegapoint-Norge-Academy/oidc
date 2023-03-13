@@ -340,7 +340,7 @@ public class AccountController : ControllerBase
     public ActionResult Login([FromQuery] string? returnUrl)
     {
         var redirectUri = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/";
-        var properties = new AuthenticationProperties { RedirectUri = redirectUri };
+        var properties = new AuthenticationProperties { RedirectUri = $"https://localhost:44469{redirectUri}" };
 
         return Challenge(properties);
     }
@@ -457,7 +457,7 @@ export const AuthProvider = ({ children }) => {
 
 ``` js
 import AuthContext from "./AuthContext";
-import {useContext} from "react";
+import { useContext } from "react";
 export const useAuthContext = () => {
     const user = useContext(AuthContext);
     if (user === undefined) {
@@ -508,13 +508,16 @@ Example component below.
 ``` js
 import { useAuthContext } from "../auth/useAuthContext";
 import React from "react";
+import { useLocation } from "react-router-dom";
 
 export function Authentication() {
     const context = useAuthContext();
+    const location = useLocation();
+
     return context?.user?.isAuthenticated
-        ? <a href="https://localhost:5001/client/account/logout">
+        ? <a href="client/account/logout">
             click here to logout (logged in as {context?.user?.claims?.find(x => x.key === 'name')?.value})</a>
-        : <a href="https://localhost:5001/client/account/login">click here to login</a>;
+        : <a href={`client/account/login?returnUrl=${location.pathname}`}>click here to login</a>;
 }
 ```
 </p>

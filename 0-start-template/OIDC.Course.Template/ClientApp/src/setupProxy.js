@@ -20,6 +20,7 @@ module.exports = function (app) {
     // the ASP NET Core webserver is unavailable
     onError: onError,
     secure: false,
+    changeOrigin: true,
     // Uncomment this line to add support for proxying websockets
     //ws: true, 
     headers: {

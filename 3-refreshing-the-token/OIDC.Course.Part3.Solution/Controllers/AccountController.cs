@@ -15,7 +15,7 @@ public class AccountController : ControllerBase
     public ActionResult Login([FromQuery] string? returnUrl)
     {
         var redirectUri = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/";
-        var properties = new AuthenticationProperties { RedirectUri = redirectUri };
+        var properties = new AuthenticationProperties { RedirectUri = $"https://localhost:44469{redirectUri}" };
         
         return Challenge(properties);
     }
