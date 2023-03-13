@@ -35,7 +35,7 @@ The workshop is divided into three parts,
 where the first part is is significantly more work than the others.
 
 ## Architecture
-![alt text](https://github.com/ITverket-Academy/oidc/blob/main/Resources/bff_pattern.png?raw=true)
+![alt text](Resources/bff_pattern.png?raw=true)
 
 # Workshop guide part 1 - Login and Logout
 ## Dependencies
