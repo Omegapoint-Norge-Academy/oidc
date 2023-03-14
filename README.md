@@ -1,4 +1,5 @@
 - [Intro](#intro)
+    * [Getting started](#getting-started)
     * [Architecture](#architecture)
 - [Workshop guide part 1 - Login and Logout](#workshop-guide-part-1---login-and-logout)
     * [Dependencies](#dependencies)
