@@ -105,6 +105,7 @@ builder.Services.AddUserAccessTokenManagement(options =>
 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
 builder.Services.AddTransient<UserAccessTokenHandler>();
 builder.Services.AddTransient<IForwarderHttpClientFactory, UserAccessTokenProxyHttpClientFactory>();
 
