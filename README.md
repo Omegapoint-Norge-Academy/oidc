@@ -36,7 +36,13 @@ The course focuses on best practices, and the BFF pattern.
 
 The workshop is divided into four parts. Part one and two will take more time to complete than part three and four.
 
+## Getting started
+Clone/fork the repo and open the template in your IDE of choice [0-start-template](0-start-template)
+
 ## Architecture
+The application has a same-site hosting setup. This means that the backend and frontend is hosted as the same site.
+To account for this in development a SPA-proxy is added
+
 ![alt text](Resources/bff_pattern.png?raw=true)
 
 # Workshop guide part 1 - Login and Logout
@@ -322,6 +328,8 @@ and add two endpoints:
 
 **client/account/login:** This endpoint should be a http get, and it should accept a `returnUrl` as a query parameter.
 It should return a `Challenge()` where the `returnUrl` is passed inn by `AuthenticationProperties`. If the `returnUrl` is null, then it should be set to "/".
+The `returnUrl` should be validated to be relative. This will protect against open redirector attacks. Use `Url.IsLocalUrl` to check if the `returnUrl` is valid.
+See https://learn.microsoft.com/en-us/aspnet/core/security/preventing-open-redirects?view=aspnetcore-7.0 for more info.
 The endpoint should be accessible for anonymous users.
 
 **client/account/logout:** This endpoint should be a http get, and accept no parameters.
@@ -341,9 +349,12 @@ public class AccountController : ControllerBase
     [HttpGet("Login")]
     public ActionResult Login([FromQuery] string? returnUrl)
     {
-        var redirectUri = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/";
-        var properties = new AuthenticationProperties { RedirectUri = $"https://localhost:44469{redirectUri}" };
-
+        if (string.IsNullOrEmpty(returnUrl) || !Url.IsLocalUrl(returnUrl))
+        {
+            returnUrl = "/";
+        }
+        var properties = new AuthenticationProperties { RedirectUri = $"https://localhost:44469{returnUrl}" };
+        
         return Challenge(properties);
     }
 
