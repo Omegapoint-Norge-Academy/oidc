@@ -749,9 +749,11 @@ For additional suggestions for improvements, ask your course teacher.
 
 # Appendix
 ## Debugging .NET with Fiddler
+### HTTPS
 To view https traffic in fiddler, go to **Tools -> Fiddler Options -> HTTPS** and activate HTTPS by checking the boxes shown below
 ![alt text](Resources/fiddler_https.PNG?raw=true)
 
+### Capture .NET traffic
 Fiddler relies on proxies to intercept requests. To inspect all traffic from .NET a proxy must be added.
 Open `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config` and add the following code section at the bottom immediately after `</system.web>`
 
@@ -766,3 +768,10 @@ Open `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config` and
 This will allow fiddler to read .NET traffic.
 
 **NB:** remember to remove the proxy when finished.
+
+### Use filters
+Use filters to not get overloaded with traffic that is not interesting.
+
+Recommended host filters for this application: `dev-my7g8x3rrwfzi3lh.eu.auth0.com; localhost:5001; localhost:44469;`
+
+![alt text](Resources/fiddler_filter.PNG?raw=true)
