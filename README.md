@@ -334,7 +334,7 @@ See https://learn.microsoft.com/en-us/aspnet/core/security/preventing-open-redir
 The endpoint should be accessible for anonymous users.
 
 **client/account/logout:** This endpoint should be a http get, and accept no parameters.
-It should da a `HttpContext.SignOutAsync()` on both the cookie scheme, and te openid scheme.
+It should do a `HttpContext.SignOutAsync()` on both the cookie scheme, and the openid scheme.
 When signing out of the cookie scheme a redirect uri to the home page of the app should be configured.
 
 <details>
@@ -436,6 +436,7 @@ Create a user controller with the current endpoint:
 
 **client/account/user:** This endpoint should be a http get, and accept no parameters.
 It should return a `UserInfo` record. `UserInfo` should be populated with data from the `UserPrincipal`.
+The `UserPrincipal` can be accessed with the property `User` from the `ControllerBase`. This object contains authentication states and all claims.
 When adding claims to `UserInfo`, make sure to only add the claims we need.
 We do not want to expose all claims for security reasons.
 For now, expose only the claim named `name`.
